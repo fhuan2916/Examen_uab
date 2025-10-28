@@ -33,25 +33,25 @@
             </div>
             <div class="formularios">
                 <div class="cli">
-                    <form action="">
-                        <h3>Clientes</h3>
-                        <div class="cont_cli">
-                            <div class="nom">
-                                <label for="">Nombre</label>
-                                <input type="text">
-                            </div>
-                            <div class="ci_button">
-                                <div class="cuadro_ci">
-                                    <label for="">CI</label>
-                                </div>
-                                <div class="button_ci">
-                                    <input type="text">
-                                    <button type="submit">Agregar</button>
-                                    <button type="button">Borrar</button>
-                                </div>
-                            </div>
-                        </div>
-                    </form>
+                    <form id="cliente-form">
+        <h3>Clientes</h3>
+        <div class="cont_cli">
+            <div class="nom">
+                <label for="nombre">Nombre</label>
+                <input type="text" id="nombre" required>
+            </div>
+            <div class="ci_button">
+                <div class="cuadro_ci">
+                    <label for="ci">CI</label>
+                </div>
+                <div class="button_ci">
+                    <input type="text" id="ci" required>
+                    <button type="button" id="agregar">Agregar</button>
+                    <button type="button" id="borrar">Borrar</button>
+                </div>
+            </div>
+        </div>
+    </form>
                 </div>
                 <div class="pedidos">
                     <form action="">
@@ -169,7 +169,7 @@
                     <button>agregar</button>
                 </div>
                 <div class="table">
-                    <table>
+                    <!-- <table>
                         <thead>
                             <tr>
                                 <th>Producto</th>
@@ -196,7 +196,11 @@
                             }
                             ?>
                         </tbody>
-                    </table>
+                    </table> -->
+                    <div id="clientes-lista">
+        <h3>Lista de Clientes</h3>
+        <div id="lista"></div>
+    </div>
                 </div>
             </div>
         </div>
@@ -283,5 +287,103 @@
             &copy; <?php echo date("Y"); ?> Empresa. Todos los derechos reservados.
         </div>
     </footer>
+    <script>
+            // Abrir o crear la base de datos IndexedDB
+            const request = indexedDB.open('ClientesDB', 1);
+            request.onerror = function(event) {
+                console.error('Error al abrir la base de datos:', event.target.error);
+            };
+            request.onsuccess = function(event) {
+                const db = event.target.result;
+                console.log('Base de datos abierta exitosamente');
+                mostrarClientes(db); // Mostrar clientes al cargar
+            };
+            request.onupgradeneeded = function(event) {
+            const db = event.target.result;
+            // Crear un object store para clientes, usando 'ci' como clave primaria
+            const objectStore = db.createObjectStore('clientes', { keyPath: 'ci' });
+            objectStore.createIndex('nombre', 'nombre', { unique: false });
+            console.log('Object store creado');
+        };
+        // Función para agregar un cliente
+        function agregarCliente(db) {
+            const nombre = document.getElementById('nombre').value.trim();
+            const ci = document.getElementById('ci').value.trim();
+            if (!nombre || !ci) {
+                alert('Por favor, ingresa tanto el nombre como el CI.');
+                return;
+            }
+            const transaction = db.transaction(['clientes'], 'readwrite');
+            const objectStore = transaction.objectStore('clientes');
+            const cliente = { nombre: nombre, ci: ci };
+            const request = objectStore.add(cliente);
+            request.onsuccess = function(event) {
+                console.log('Cliente agregado:', cliente);
+                document.getElementById('nombre').value = '';
+                document.getElementById('ci').value = '';
+                mostrarClientes(db); // Actualizar la lista
+            };
+            request.onerror = function(event) {
+                console.error('Error al agregar cliente:', event.target.error);
+                alert('Error al agregar cliente. El CI ya existe.');
+            };
+        }
+        // Función para borrar un cliente por CI
+        function borrarCliente(db) {
+            const ci = document.getElementById('ci').value.trim();
+            if (!ci) {
+                alert('Por favor, ingresa el CI para borrar.');
+                return;
+            }
+            const transaction = db.transaction(['clientes'], 'readwrite');
+            const objectStore = transaction.objectStore('clientes');
+            const request = objectStore.delete(ci);
+            request.onsuccess = function(event) {
+                console.log('Cliente borrado con CI:', ci);
+                document.getElementById('ci').value = '';
+                mostrarClientes(db); // Actualizar la lista
+            };
+            request.onerror = function(event) {
+                console.error('Error al borrar cliente:', event.target.error);
+                alert('Error al borrar cliente. Verifica el CI.');
+            };
+        }
+        // Función para mostrar todos los clientes
+        function mostrarClientes(db) {
+            const transaction = db.transaction(['clientes'], 'readonly');
+            const objectStore = transaction.objectStore('clientes');
+            const request = objectStore.getAll();
+            request.onsuccess = function(event) {
+                const clientes = event.target.result;
+                const listaDiv = document.getElementById('lista');
+                listaDiv.innerHTML = '';
+                if (clientes.length === 0) {
+                    listaDiv.innerHTML = '<p>No hay clientes registrados.</p>';
+                } else {
+                    clientes.forEach(cliente => {
+                        const clienteDiv = document.createElement('div');
+                        clienteDiv.className = 'cliente';
+                        clienteDiv.innerHTML = `<strong>Nombre:</strong> ${cliente.nombre} <br> <strong>CI:</strong> ${cliente.ci}`;
+                        listaDiv.appendChild(clienteDiv);
+                    });
+                }
+            };
+            request.onerror = function(event) {
+                console.error('Error al obtener clientes:', event.target.error);
+            };
+        }
+        // Event listeners para los botones
+        document.getElementById('agregar').addEventListener('click', function() {
+            const db = request.result; // Asumiendo que la DB ya está abierta
+            agregarCliente(db);
+        });
+        document.getElementById('borrar').addEventListener('click', function() {
+            const db = request.result;
+            borrarCliente(db);
+        });
+    </script>
+</body>
+</html>
+
 </body>
 </html>

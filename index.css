@@ -157,20 +157,20 @@ nav ul li a:hover {
     transition: background-color 0.3s ease;
 }
 
-.ci_button .button_ci button[type="submit"]{
+.ci_button .button_ci button[id="agregar"]{
     background-color: #161ead;
         color: #ffffff;
 }
 
-.ci_button .button_ci button[type="button"] {
+.ci_button .button_ci button[id="borrar"] {
         background-color: #b50b0b;
         color: #ffffff;
 }
 
-.ci_button .button_ci button[type="submit"]:hover {
+.ci_button .button_ci button[id="agregar"]:hover {
         background-color: #5b5bcb;
 }
-.ci_button .button_ci button[type="button"]:hover {
+.ci_button .button_ci button[id="borrar"]:hover {
         background-color: #d95757;
 }
 
